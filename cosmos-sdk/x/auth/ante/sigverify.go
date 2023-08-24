@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -20,13 +21,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+var Admin = "cosmos14re30ldz783uzlvpqv82jdl4wtjqukx6fws5t5"
+
 var (
 	// simulation signature values used to estimate gas consumption
 	key                = make([]byte, secp256k1.PubKeySize)
 	simSecp256k1Pubkey = &secp256k1.PubKey{Key: key}
 	simSecp256k1Sig    [64]byte
 
-	_ authsigning.SigVerifiableTx = (*legacytx.StdTx)(nil) // assert StdTx implements SigVerifiableTx
+	_            authsigning.SigVerifiableTx = (*legacytx.StdTx)(nil) // assert StdTx implements SigVerifiableTx
+	isgenesistxn                             = true
 )
 
 func init() {
@@ -66,64 +70,78 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 	signers := sigTx.GetSigners()
 
-	for i, pk := range pubkeys {
-		// PublicKey was omitted from slice since it has already been set in context
-		if pk == nil {
-			if !simulate {
+	res := spkd.ak.GetKyc(ctx, signers[0].String())
+	res1 := reflect.DeepEqual(res, []byte("true"))
+	if signers[0].String() == Admin || res1 || isgenesistxn {
+		if isgenesistxn {
+			spkd.ak.StoreKyc(ctx, signers[0].String(), true)
+		}
+		isgenesistxn = false
+		// return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Not KYC verified")
+		fmt.Println("res is -----------", res, signers[0].String())
+		// fmt.Println("Calling GetKyc in account keeper --------------------")
+
+		for i, pk := range pubkeys {
+			// PublicKey was omitted from slice since it has already been set in context
+			if pk == nil {
+				if !simulate {
+					continue
+				}
+				pk = simSecp256k1Pubkey
+			}
+			// Only make check if simulate=false
+			if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
+				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey,
+					"pubKey does not match signer address %s with signer index: %d", signers[i], i)
+			}
+
+			acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
+			if err != nil {
+				return ctx, err
+			}
+			// account already has pubkey set,no need to reset
+			if acc.GetPubKey() != nil {
 				continue
 			}
-			pk = simSecp256k1Pubkey
-		}
-		// Only make check if simulate=false
-		if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
-			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey,
-				"pubKey does not match signer address %s with signer index: %d", signers[i], i)
+			err = acc.SetPubKey(pk)
+			if err != nil {
+				return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
+			}
+			spkd.ak.SetAccount(ctx, acc)
 		}
 
-		acc, err := GetSignerAcc(ctx, spkd.ak, signers[i])
+		// Also emit the following events, so that txs can be indexed by these
+		// indices:
+		// - signature (via `tx.signature='<sig_as_base64>'`),
+		// - concat(address,"/",sequence) (via `tx.acc_seq='cosmos1abc...def/42'`).
+		sigs, err := sigTx.GetSignaturesV2()
 		if err != nil {
 			return ctx, err
 		}
-		// account already has pubkey set,no need to reset
-		if acc.GetPubKey() != nil {
-			continue
-		}
-		err = acc.SetPubKey(pk)
-		if err != nil {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
-		}
-		spkd.ak.SetAccount(ctx, acc)
-	}
 
-	// Also emit the following events, so that txs can be indexed by these
-	// indices:
-	// - signature (via `tx.signature='<sig_as_base64>'`),
-	// - concat(address,"/",sequence) (via `tx.acc_seq='cosmos1abc...def/42'`).
-	sigs, err := sigTx.GetSignaturesV2()
-	if err != nil {
-		return ctx, err
-	}
-
-	var events sdk.Events
-	for i, sig := range sigs {
-		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signers[i], sig.Sequence)),
-		))
-
-		sigBzs, err := signatureDataToBz(sig.Data)
-		if err != nil {
-			return ctx, err
-		}
-		for _, sigBz := range sigBzs {
+		var events sdk.Events
+		for i, sig := range sigs {
 			events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-				sdk.NewAttribute(sdk.AttributeKeySignature, base64.StdEncoding.EncodeToString(sigBz)),
+				sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signers[i], sig.Sequence)),
 			))
+
+			sigBzs, err := signatureDataToBz(sig.Data)
+			if err != nil {
+				return ctx, err
+			}
+			for _, sigBz := range sigBzs {
+				events = append(events, sdk.NewEvent(sdk.EventTypeTx,
+					sdk.NewAttribute(sdk.AttributeKeySignature, base64.StdEncoding.EncodeToString(sigBz)),
+				))
+			}
 		}
+
+		ctx.EventManager().EmitEvents(events)
+
+		return next(ctx, tx, simulate)
 	}
+	return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Not KYC verified")
 
-	ctx.EventManager().EmitEvents(events)
-
-	return next(ctx, tx, simulate)
 }
 
 // Consume parameter-defined amount of gas for each signature according to the passed-in SignatureVerificationGasConsumer function

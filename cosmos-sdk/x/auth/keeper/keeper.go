@@ -2,16 +2,20 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	
 )
 
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
@@ -45,6 +49,12 @@ type AccountKeeperI interface {
 
 	// Fetch the next account number, and increment the internal counter.
 	GetNextAccountNumber(sdk.Context) uint64
+
+	// StoreKyc(sdk.Context, string, bool)
+
+	// GetKyc(sdk.Context, string) []byte
+
+	// ChangeAdmin(sdk.Context,string) []byte
 }
 
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
@@ -57,6 +67,7 @@ type AccountKeeper struct {
 
 	// The prototypical AccountI constructor.
 	proto func() types.AccountI
+	
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -80,13 +91,13 @@ func NewAccountKeeper(
 	for name, perms := range maccPerms {
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
-
 	return AccountKeeper{
 		key:           key,
 		proto:         proto,
 		cdc:           cdc,
 		paramSubspace: paramstore,
 		permAddrs:     permAddrs,
+		
 	}
 }
 
@@ -113,6 +124,29 @@ func (ak AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint6
 	}
 
 	return acc.GetSequence(), nil
+}
+
+func (ak AccountKeeper) StoreKyc(ctx sdk.Context, add string, trf bool) {
+	fmt.Println("this is working------------")
+
+	store := prefix.NewStore(ctx.KVStore(ak.key), types.AddressStoreKeyPrefix)
+
+	store.Set([]byte(add), []byte(strconv.FormatBool(trf)))
+	fmt.Println("stored the kv pair", add, []byte(strconv.FormatBool(trf)))
+
+}
+
+func (ak AccountKeeper) GetKyc(ctx sdk.Context, add string) []byte {
+	store := prefix.NewStore(ctx.KVStore(ak.key), types.AddressStoreKeyPrefix)
+	res := store.Get([]byte(add))
+	fmt.Println("result is -------------", res)
+	return res
+}
+
+func (ak AccountKeeper) ChangeAdmin(ctx sdk.Context, address string) error {
+	ante.Admin = address
+	fmt.Println("====================================Updated admin is====================================:", ante.Admin)
+	return nil
 }
 
 // GetNextAccountNumber returns and increments the global account number counter.

@@ -1,0 +1,71 @@
+syntax = "proto3";
+package cosmos.belkyc.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/belkyc/v1beta1/params.proto";
+import "cosmos/belkyc/v1beta1/kyc.proto";
+// this line is used by starport scaffolding # 1
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/belkyc/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/belkyc/belkyc/params";
+  }
+  // Queries a Kyc by index.
+	rpc Kyc(QueryGetKycRequest) returns (QueryGetKycResponse) {
+		option (google.api.http).get = "/belkyc/belkyc/kyc/{address}";
+	}
+
+	// Queries a list of Kyc items.
+	rpc KycAll(QueryAllKycRequest) returns (QueryAllKycResponse) {
+		option (google.api.http).get = "/belkyc/belkyc/kyc";
+	}
+
+// Queries a list of GetAdmin items.
+	rpc GetAdmin(QueryGetAdminRequest) returns (QueryGetAdminResponse) {
+		option (google.api.http).get = "/belkyc/belkyc/get_admin";
+	}
+
+// this line is used by starport scaffolding # 2
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetKycRequest {
+	  string address = 1;
+
+}
+
+message QueryGetKycResponse {
+	Kyc kyc = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllKycRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllKycResponse {
+	repeated Kyc kyc = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetAdminRequest {
+}
+
+message QueryGetAdminResponse {
+  string address = 1;
+}
+
+// this line is used by starport scaffolding # 3
