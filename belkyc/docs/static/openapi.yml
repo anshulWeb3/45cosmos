@@ -117,6 +117,16 @@ paths:
           in: query
           required: false
           type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
       tags:
         - Query
   '/belkyc/belkyc/kyc/{address}':
@@ -29599,6 +29609,11 @@ definitions:
       value:
         type: boolean
       creator:
+        type: string
+  belkyc.belkyc.MsgChangeAdminResponse:
+    type: object
+    properties:
+      address:
         type: string
   belkyc.belkyc.MsgCreateKycResponse:
     type: object

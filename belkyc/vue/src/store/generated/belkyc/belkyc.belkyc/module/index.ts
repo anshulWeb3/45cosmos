@@ -4,15 +4,17 @@ import { StdFee } from "@cosmjs/launchpad";
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { Registry, OfflineSigner, EncodeObject, DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { Api } from "./rest";
-import { MsgCreateKyc } from "./types/belkyc/tx";
 import { MsgUpdateKyc } from "./types/belkyc/tx";
+import { MsgCreateKyc } from "./types/belkyc/tx";
 import { MsgDeleteKyc } from "./types/belkyc/tx";
+import { MsgChangeAdmin } from "./types/belkyc/tx";
 
 
 const types = [
-  ["/belkyc.belkyc.MsgCreateKyc", MsgCreateKyc],
   ["/belkyc.belkyc.MsgUpdateKyc", MsgUpdateKyc],
+  ["/belkyc.belkyc.MsgCreateKyc", MsgCreateKyc],
   ["/belkyc.belkyc.MsgDeleteKyc", MsgDeleteKyc],
+  ["/belkyc.belkyc.MsgChangeAdmin", MsgChangeAdmin],
   
 ];
 export const MissingWalletError = new Error("wallet is required");
@@ -45,9 +47,10 @@ const txClient = async (wallet: OfflineSigner, { addr: addr }: TxClientOptions =
 
   return {
     signAndBroadcast: (msgs: EncodeObject[], { fee, memo }: SignAndBroadcastOptions = {fee: defaultFee, memo: ""}) => client.signAndBroadcast(address, msgs, fee,memo),
-    msgCreateKyc: (data: MsgCreateKyc): EncodeObject => ({ typeUrl: "/belkyc.belkyc.MsgCreateKyc", value: MsgCreateKyc.fromPartial( data ) }),
     msgUpdateKyc: (data: MsgUpdateKyc): EncodeObject => ({ typeUrl: "/belkyc.belkyc.MsgUpdateKyc", value: MsgUpdateKyc.fromPartial( data ) }),
+    msgCreateKyc: (data: MsgCreateKyc): EncodeObject => ({ typeUrl: "/belkyc.belkyc.MsgCreateKyc", value: MsgCreateKyc.fromPartial( data ) }),
     msgDeleteKyc: (data: MsgDeleteKyc): EncodeObject => ({ typeUrl: "/belkyc.belkyc.MsgDeleteKyc", value: MsgDeleteKyc.fromPartial( data ) }),
+    msgChangeAdmin: (data: MsgChangeAdmin): EncodeObject => ({ typeUrl: "/belkyc.belkyc.MsgChangeAdmin", value: MsgChangeAdmin.fromPartial( data ) }),
     
   };
 };

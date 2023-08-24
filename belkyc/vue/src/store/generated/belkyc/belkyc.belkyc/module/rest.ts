@@ -15,6 +15,10 @@ export interface BelkycKyc {
   creator?: string;
 }
 
+export interface BelkycMsgChangeAdminResponse {
+  address?: string;
+}
+
 export type BelkycMsgCreateKycResponse = object;
 
 export type BelkycMsgDeleteKycResponse = object;
