@@ -3,6 +3,7 @@ package belkyc.belkyc;
 
 import "gogoproto/gogo.proto";
 import "belkyc/params.proto";
+import "belkyc/kyc.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 
 option go_package = "belkyc/x/belkyc/types";
@@ -10,5 +11,6 @@ option go_package = "belkyc/x/belkyc/types";
 // GenesisState defines the belkyc module's genesis state.
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
+  repeated Kyc kycList = 2 [(gogoproto.nullable) = false];
   // this line is used by starport scaffolding # genesis/proto/state
 }

@@ -1,13 +1,39 @@
 syntax = "proto3";
 package belkyc.belkyc;
 
+import "belkyc/kyc.proto";
 // this line is used by starport scaffolding # proto/tx/import
 
 option go_package = "belkyc/x/belkyc/types";
 
 // Msg defines the Msg service.
 service Msg {
-    // this line is used by starport scaffolding # proto/tx/rpc
+      rpc CreateKyc(MsgCreateKyc) returns (MsgCreateKycResponse);
+  rpc UpdateKyc(MsgUpdateKyc) returns (MsgUpdateKycResponse);
+  rpc DeleteKyc(MsgDeleteKyc) returns (MsgDeleteKycResponse);
+// this line is used by starport scaffolding # proto/tx/rpc
 }
+
+message MsgCreateKyc {
+  string creator = 1;
+  string address = 2;
+
+  bool value = 3;
+}
+message MsgCreateKycResponse {}
+
+message MsgUpdateKyc {
+  string creator = 1;
+  string address = 2;
+
+  bool value = 3;
+}
+message MsgUpdateKycResponse {}
+
+message MsgDeleteKyc {
+  string creator = 1;
+  string address = 2;
+}
+message MsgDeleteKycResponse {}
 
 // this line is used by starport scaffolding # proto/tx/message

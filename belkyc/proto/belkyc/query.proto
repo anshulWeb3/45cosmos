@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "belkyc/params.proto";
+import "belkyc/kyc.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "belkyc/x/belkyc/types";
@@ -15,7 +16,17 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/belkyc/belkyc/params";
   }
-  // this line is used by starport scaffolding # 2
+  // Queries a Kyc by index.
+	rpc Kyc(QueryGetKycRequest) returns (QueryGetKycResponse) {
+		option (google.api.http).get = "/belkyc/belkyc/kyc/{address}";
+	}
+
+	// Queries a list of Kyc items.
+	rpc KycAll(QueryAllKycRequest) returns (QueryAllKycResponse) {
+		option (google.api.http).get = "/belkyc/belkyc/kyc";
+	}
+
+// this line is used by starport scaffolding # 2
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -25,6 +36,24 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetKycRequest {
+	  string address = 1;
+
+}
+
+message QueryGetKycResponse {
+	Kyc kyc = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllKycRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllKycResponse {
+	repeated Kyc kyc = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // this line is used by starport scaffolding # 3
