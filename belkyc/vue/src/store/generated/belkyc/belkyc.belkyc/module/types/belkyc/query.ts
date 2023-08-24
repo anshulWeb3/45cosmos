@@ -35,6 +35,12 @@ export interface QueryAllKycResponse {
   pagination: PageResponse | undefined;
 }
 
+export interface QueryGetAdminRequest {}
+
+export interface QueryGetAdminResponse {
+  address: string;
+}
+
 const baseQueryParamsRequest: object = {};
 
 export const QueryParamsRequest = {
@@ -398,6 +404,104 @@ export const QueryAllKycResponse = {
   },
 };
 
+const baseQueryGetAdminRequest: object = {};
+
+export const QueryGetAdminRequest = {
+  encode(_: QueryGetAdminRequest, writer: Writer = Writer.create()): Writer {
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): QueryGetAdminRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseQueryGetAdminRequest } as QueryGetAdminRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): QueryGetAdminRequest {
+    const message = { ...baseQueryGetAdminRequest } as QueryGetAdminRequest;
+    return message;
+  },
+
+  toJSON(_: QueryGetAdminRequest): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial(_: DeepPartial<QueryGetAdminRequest>): QueryGetAdminRequest {
+    const message = { ...baseQueryGetAdminRequest } as QueryGetAdminRequest;
+    return message;
+  },
+};
+
+const baseQueryGetAdminResponse: object = { address: "" };
+
+export const QueryGetAdminResponse = {
+  encode(
+    message: QueryGetAdminResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.address !== "") {
+      writer.uint32(10).string(message.address);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): QueryGetAdminResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseQueryGetAdminResponse } as QueryGetAdminResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.address = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryGetAdminResponse {
+    const message = { ...baseQueryGetAdminResponse } as QueryGetAdminResponse;
+    if (object.address !== undefined && object.address !== null) {
+      message.address = String(object.address);
+    } else {
+      message.address = "";
+    }
+    return message;
+  },
+
+  toJSON(message: QueryGetAdminResponse): unknown {
+    const obj: any = {};
+    message.address !== undefined && (obj.address = message.address);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryGetAdminResponse>
+  ): QueryGetAdminResponse {
+    const message = { ...baseQueryGetAdminResponse } as QueryGetAdminResponse;
+    if (object.address !== undefined && object.address !== null) {
+      message.address = object.address;
+    } else {
+      message.address = "";
+    }
+    return message;
+  },
+};
+
 /** Query defines the gRPC querier service. */
 export interface Query {
   /** Parameters queries the parameters of the module. */
@@ -406,6 +510,8 @@ export interface Query {
   Kyc(request: QueryGetKycRequest): Promise<QueryGetKycResponse>;
   /** Queries a list of Kyc items. */
   KycAll(request: QueryAllKycRequest): Promise<QueryAllKycResponse>;
+  /** Queries a list of GetAdmin items. */
+  GetAdmin(request: QueryGetAdminRequest): Promise<QueryGetAdminResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -429,6 +535,14 @@ export class QueryClientImpl implements Query {
     const data = QueryAllKycRequest.encode(request).finish();
     const promise = this.rpc.request("belkyc.belkyc.Query", "KycAll", data);
     return promise.then((data) => QueryAllKycResponse.decode(new Reader(data)));
+  }
+
+  GetAdmin(request: QueryGetAdminRequest): Promise<QueryGetAdminResponse> {
+    const data = QueryGetAdminRequest.encode(request).finish();
+    const promise = this.rpc.request("belkyc.belkyc.Query", "GetAdmin", data);
+    return promise.then((data) =>
+      QueryGetAdminResponse.decode(new Reader(data))
+    );
   }
 }
 
