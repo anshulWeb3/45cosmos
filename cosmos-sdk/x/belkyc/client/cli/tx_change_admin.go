@@ -16,10 +16,10 @@ func CmdChangeAdmin() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "change-admin [address] [message]",
 		Short: "Change admin address",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argAddress := args[0]
-			argMessage := args[1]
+			
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -29,7 +29,7 @@ func CmdChangeAdmin() *cobra.Command {
 			msg := types.NewMsgChangeAdmin(
 				clientCtx.GetFromAddress().String(),
 				argAddress,
-				argMessage,
+				
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

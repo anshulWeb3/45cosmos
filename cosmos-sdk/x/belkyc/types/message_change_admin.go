@@ -9,7 +9,7 @@ const TypeMsgChangeAdmin = "change_admin"
 
 var _ sdk.Msg = &MsgChangeAdmin{}
 
-func NewMsgChangeAdmin(creator string, address string, message string) *MsgChangeAdmin {
+func NewMsgChangeAdmin(creator string, address string, ) *MsgChangeAdmin {
 	return &MsgChangeAdmin{
 		Creator: creator,
 		Address: address,
