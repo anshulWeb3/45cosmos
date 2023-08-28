@@ -1,5 +1,5 @@
 syntax = "proto3";
-package belkyc.belkyc;
+package cosmos.belkyc.v1beta1;
 
 import "cosmos/belkyc/v1beta1/kyc.proto";
 // this line is used by starport scaffolding # proto/tx/import
